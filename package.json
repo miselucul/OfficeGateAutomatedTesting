@@ -1,0 +1,21 @@
+{
+  "name": "officegate-playwright-tests",
+  "version": "1.0.0",
+  "description": "Playwright automated testing for OfficeGate",
+  "scripts": {
+    "save-login": "node scripts/save-login-state.ts",
+    "codegen": "playwright codegen --load-storage=login-state.json https://office-gate.balinexus.com/sign-in",
+    "codegen:reset": "playwright codegen https://office-gate.balinexus.com/sign-in",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.0"
+  }
+}
