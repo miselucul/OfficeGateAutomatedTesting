@@ -1,0 +1,5 @@
+2026/03/11-12:15:58.251 2880 Creating DB C:\Users\QA Engineer\Documents\officegate\%temp%\playwright-test-123\Default\Local Storage\leveldb since it was missing.
+2026/03/11-12:15:58.281 2880 Reusing MANIFEST C:\Users\QA Engineer\Documents\officegate\%temp%\playwright-test-123\Default\Local Storage\leveldb/MANIFEST-000001
+2026/03/11-12:16:58.313 2880 Level-0 table #5: started
+2026/03/11-12:16:58.322 2880 Level-0 table #5: 46722 bytes OK
+2026/03/11-12:16:58.325 2880 Delete type=0 #3
