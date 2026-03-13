@@ -15,7 +15,7 @@ on:
           - report
           - edgecase
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 9 * * 1'
   push:
     branches: [ main ]
     paths:
