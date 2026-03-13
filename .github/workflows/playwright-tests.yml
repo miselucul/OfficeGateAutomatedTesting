@@ -1,361 +1,110 @@
 name: Office Gate E2E Tests
 
 on:
-  # Manual trigger untuk refresh cookies dan debugging
   workflow_dispatch:
     inputs:
       test_module:
-        description: 'Test module to run (all/checkin-checkout/guest/report/edgecase)'
+        description: 'Test module to run'
         required: true
         default: 'all'
         type: choice
         options:
           - all
-          - checkin-checkout
+          - checkin
           - guest
           - report
           - edgecase
-      debug_mode:
-        description: 'Enable debug mode (with video recording)'
-        required: false
-        default: false
-        type: boolean
-
-  # Scheduled runs setiap 6 jam (menyesuaikan cookie expiration 24 jam)
   schedule:
-    - cron: '0 */6 * * *'  # Setiap 6 jam
-
-  # Trigger otomatis pada push ke branch tertentu
+    - cron: '0 */6 * * *'
   push:
-    branches: [ main, develop ]
-    paths:
-      - 'tests/**'
-      - 'playwright.config.ts'
-      - 'scripts/**'
-
-  # Pull request trigger
-  pull_request:
     branches: [ main ]
     paths:
       - 'tests/**'
       - 'playwright.config.ts'
 
-# Environment variables untuk semua jobs
-env:
-  BASE_URL: ${{ vars.BASE_URL || 'https://office-gate.balinexus.com' }}
-  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/pw-browsers
-
 jobs:
-  # Job khusus untuk validasi cookies sebelum test utama
-  validate-cookies:
+  run-tests:
     runs-on: ubuntu-latest
-    outputs:
-      cookies_valid: ${{ steps.check-cookies.outputs.valid }}
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Check cookies validity
-        id: check-cookies
-        run: |
-          # Decode cookies dari GitHub Secrets
-          echo "${{ secrets.LOGIN_STATE }}" | base64 --decode > login-state.json
-          
-          # Simple check jika cookies masih valid (bisa ditambahkan logic lebih kompleks)
-          if [ -f "login-state.json" ]; then
-            echo "valid=true" >> $GITHUB_OUTPUT
-          else
-            echo "valid=false" >> $GITHUB_OUTPUT
-            echo "::warning::Cookies file not found or invalid"
-          fi
-      
-      - name: Upload cookies as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: login-state
-          path: login-state.json
-          retention-days: 1
+    timeout-minutes: 60
 
-  # Job untuk refresh cookies (manual trigger)
-  refresh-cookies:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.test_module == 'refresh-cookies'
-    runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Install Playwright browsers
-        run: npx playwright install chromium --with-deps
-      
-      - name: Refresh cookies
-        env:
-          OFFICE_GATE_USERNAME: ${{ secrets.OFFICE_GATE_USERNAME }}
-          OFFICE_GATE_PASSWORD: ${{ secrets.OFFICE_GATE_PASSWORD }}
-          OTP_SECRET: ${{ secrets.OTP_SECRET }}  # Optional: untuk 2FA automation
-        run: |
-          # Jika ada OTP secret, bisa automasi 2FA
-          if [ -n "$OTP_SECRET" ]; then
-            npm run refresh-cookies:with-2fa
-          else
-            npm run refresh-cookies
-          fi
-      
-      - name: Encode and update secret
-        run: |
-          # Encode cookies file ke base64 untuk disimpan di secret
-          COOKIES_B64=$(base64 -w 0 login-state.json)
-          echo "::notice::Cookies refreshed successfully"
-          echo "Copy this value to update LOGIN_STATE secret:"
-          echo "$COOKIES_B64"
-      
-      - name: Upload refreshed cookies
-        uses: actions/upload-artifact@v4
-        with:
-          name: refreshed-login-state
-          path: login-state.json
-          retention-days: 7
 
-  # Main test execution dengan sequential jobs
-  test-checkin-checkout:
-    needs: validate-cookies
-    if: success() && (github.event.inputs.test_module == 'all' || github.event.inputs.test_module == 'checkin-checkout' || github.event_name == 'schedule' || github.event_name == 'push')
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    environment: production
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Download cookies
-        uses: actions/download-artifact@v4
-        with:
-          name: login-state
-      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
-      
-      - name: Run Checkin-Checkout tests
-        id: run-tests
-        continue-on-error: true
+
+      - name: Build login-state.json from secrets
         run: |
-          npx playwright test tests/checkin-checkout/checkin-checkout.spec.ts \
-            --project=chromium \
-            --reporter=html,json
-        env:
-          HOME: /root
-      
+          python3 -c "
+          import json
+          state = {
+            'cookies': [
+              {
+                'name': '__Host-next-auth.csrf-token',
+                'value': '${{ secrets.CSRF_TOKEN }}',
+                'domain': 'office-gate.balinexus.com',
+                'path': '/',
+                'expires': -1,
+                'httpOnly': True,
+                'secure': True,
+                'sameSite': 'Lax'
+              },
+              {
+                'name': '__Secure-next-auth.callback-url',
+                'value': '${{ secrets.CALLBACK_URL }}',
+                'domain': 'office-gate.balinexus.com',
+                'path': '/',
+                'expires': -1,
+                'httpOnly': True,
+                'secure': True,
+                'sameSite': 'Lax'
+              },
+              {
+                'name': '__Secure-next-auth.session-token',
+                'value': '${{ secrets.SESSION_TOKEN }}',
+                'domain': 'office-gate.balinexus.com',
+                'path': '/',
+                'expires': -1,
+                'httpOnly': True,
+                'secure': True,
+                'sameSite': 'Lax'
+              }
+            ],
+            'origins': []
+          }
+          with open('login-state.json', 'w') as f:
+            json.dump(state, f)
+          "
+
+      - name: Run checkin tests
+        if: ${{ github.event.inputs.test_module == 'all' || github.event.inputs.test_module == 'checkin' || github.event_name != 'workflow_dispatch' }}
+        run: npx playwright test tests/checkin --project=chromium
+
+      - name: Run guest tests
+        if: ${{ github.event.inputs.test_module == 'all' || github.event.inputs.test_module == 'guest' || github.event_name != 'workflow_dispatch' }}
+        run: npx playwright test tests/guest --project=chromium
+
+      - name: Run report tests
+        if: ${{ github.event.inputs.test_module == 'all' || github.event.inputs.test_module == 'report' || github.event_name != 'workflow_dispatch' }}
+        run: npx playwright test tests/report --project=chromium
+
+      - name: Run edgecase tests
+        if: ${{ github.event.inputs.test_module == 'all' || github.event.inputs.test_module == 'edgecase' || github.event_name != 'workflow_dispatch' }}
+        run: npx playwright test tests/edgecase --project=chromium
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: checkin-checkout-results
-          path: |
-            test-results/
-            playwright-report/
-            test-artifacts/
+          name: playwright-report
+          path: playwright-report/
           retention-days: 14
-      
-      - name: Set output status
-        id: set-status
-        run: echo "test_status=${{ steps.run-tests.outcome }}" >> $GITHUB_OUTPUT
-    
-    outputs:
-      test_status: ${{ steps.set-status.outputs.test_status }}
-
-  test-guest:
-    needs: [validate-cookies, test-checkin-checkout]
-    if: always() && (needs.test-checkin-checkout.result == 'success' || needs.test-checkin-checkout.result == 'skipped') && (github.event.inputs.test_module == 'all' || github.event.inputs.test_module == 'guest')
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    environment: production
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Download cookies
-        uses: actions/download-artifact@v4
-        with:
-          name: login-state
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Install Playwright browsers
-        run: npx playwright install chromium --with-deps
-      
-      - name: Run Guest module tests
-        run: |
-          npx playwright test tests/guest/guest.spec.ts \
-            --project=chromium \
-            --reporter=html,json
-      
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: guest-results
-          path: |
-            test-results/
-            playwright-report/
-          retention-days: 14
-
-  test-report:
-    needs: [validate-cookies, test-guest]
-    if: always() && (needs.test-guest.result == 'success' || needs.test-guest.result == 'skipped') && (github.event.inputs.test_module == 'all' || github.event.inputs.test_module == 'report')
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    environment: production
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Download cookies
-        uses: actions/download-artifact@v4
-        with:
-          name: login-state
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Install Playwright browsers
-        run: npx playwright install chromium --with-deps
-      
-      - name: Run Report module tests
-        run: |
-          npx playwright test tests/report/report.spec.ts \
-            --project=chromium \
-            --reporter=html,json
-      
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: report-results
-          path: |
-            test-results/
-            playwright-report/
-          retention-days: 14
-
-  test-edgecase:
-    needs: [validate-cookies, test-report]
-    if: always() && (needs.test-report.result == 'success' || needs.test-report.result == 'skipped') && (github.event.inputs.test_module == 'all' || github.event.inputs.test_module == 'edgecase')
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    environment: production
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Download cookies
-        uses: actions/download-artifact@v4
-        with:
-          name: login-state
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Install Playwright browsers
-        run: npx playwright install chromium --with-deps
-      
-      - name: Run Edgecase tests
-        run: |
-          npx playwright test tests/edgecase/edgecase.spec.ts \
-            --project=chromium \
-            --reporter=html,json
-      
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: edgecase-results
-          path: |
-            test-results/
-            playwright-report/
-          retention-days: 14
-
-  # Consolidated reporting
-  generate-report:
-    needs: [test-checkin-checkout, test-guest, test-report, test-edgecase]
-    if: always() && github.event_name != 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all test results
-        uses: actions/download-artifact@v4
-        with:
-          path: all-results
-      
-      - name: Generate consolidated report
-        run: |
-          echo "# Office Gate E2E Test Report" > report.md
-          echo "Run ID: ${{ github.run_id }}" >> report.md
-          echo "Trigger: ${{ github.event_name }}" >> report.md
-          echo "Date: $(date)" >> report.md
-          echo "" >> report.md
-          
-          # Check status each test module
-          echo "## Test Results Summary" >> report.md
-          echo "| Module | Status |" >> report.md
-          echo "|--------|--------|" >> report.md
-          echo "| Checkin-Checkout | ${{ needs.test-checkin-checkout.result }} |" >> report.md
-          echo "| Guest | ${{ needs.test-guest.result }} |" >> report.md
-          echo "| Report | ${{ needs.test-report.result }} |" >> report.md
-          echo "| Edgecase | ${{ needs.test-edgecase.result }} |" >> report.md
-          
-          # Save report as artifact
-          echo "report<<EOF" >> $GITHUB_ENV
-          cat report.md >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-      
-      - name: Upload consolidated report
-        uses: actions/upload-artifact@v4
-        with:
-          name: consolidated-test-report
-          path: report.md
-          retention-days: 30
-      
-      - name: Send notification (optional)
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const report = `Test run failed! Check details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
-            // Add your notification logic here (Slack, email, etc.)
