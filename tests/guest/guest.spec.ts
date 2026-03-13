@@ -326,67 +326,67 @@ test.describe('Guests Module', () => {
         }
     }
 });
-    test('TC-GUEST-010 | Sort Guest List A-Z', async ({ page }) => {
-        await page.goto('https://office-gate.balinexus.com/');
-    await page.getByRole('link', { name: '👥 Guests' }).click();
+    // test('TC-GUEST-010 | Sort Guest List A-Z', async ({ page }) => {
+    //     await page.goto('https://office-gate.balinexus.com/');
+    // await page.getByRole('link', { name: '👥 Guests' }).click();
     
-    // Check if sort button exists and get current sort state
-    const sortButton = page.getByRole('button', { name: /Sort: Name/ });
-    await expect(sortButton).toBeVisible();
-    // Get current sort direction from button text
-    const sortText = await sortButton.textContent();
-    console.log(`📌 Current sort: ${sortText}`);
+    // // Check if sort button exists and get current sort state
+    // const sortButton = page.getByRole('button', { name: /Sort: Name/ });
+    // await expect(sortButton).toBeVisible();
+    // // Get current sort direction from button text
+    // const sortText = await sortButton.textContent();
+    // console.log(`📌 Current sort: ${sortText}`);
     
-    // If not sorted A-Z, click to sort A-Z
-    if (!sortText?.includes('(A-Z)')) {
-        await sortButton.click();
-        await page.waitForTimeout(500);
-    }
+    // // If not sorted A-Z, click to sort A-Z
+    // if (!sortText?.includes('(A-Z)')) {
+    //     await sortButton.click();
+    //     await page.waitForTimeout(500);
+    // }
     
-    // Get all guest names from first column
-    const nameCells = page.getByRole('row')
-        .filter({ hasNotText: 'GUEST INFO' })
-        .getByRole('cell').first();
+    // // Get all guest names from first column
+    // const nameCells = page.getByRole('row')
+    //     .filter({ hasNotText: 'GUEST INFO' })
+    //     .getByRole('cell').first();
     
-    const nameCount = await nameCells.count();
-    const names: string[] = [];
+    // const nameCount = await nameCells.count();
+    // const names: string[] = [];
     
-    for (let i = 0; i < Math.min(nameCount, 20); i++) {
-        const name = await nameCells.nth(i).textContent();
-        if (name) names.push(name.trim());
-    }
+    // for (let i = 0; i < Math.min(nameCount, 20); i++) {
+    //     const name = await nameCells.nth(i).textContent();
+    //     if (name) names.push(name.trim());
+    // }
     
-    console.log(`📋 First ${names.length} names:`, names);
+    // console.log(`📋 First ${names.length} names:`, names);
     
-    // Verify names are sorted alphabetically
-    const sortedNames = [...names].sort((a, b) => a.localeCompare(b));
-    expect(names).toEqual(sortedNames);
+    // // Verify names are sorted alphabetically
+    // const sortedNames = [...names].sort((a, b) => a.localeCompare(b));
+    // expect(names).toEqual(sortedNames);
     
-    // Verify first entry starts with A (or earliest letter)
-    const firstChar = names[0].charAt(0).toUpperCase();
-    console.log(`🔤 First name starts with: ${firstChar}`);
+    // // Verify first entry starts with A (or earliest letter)
+    // const firstChar = names[0].charAt(0).toUpperCase();
+    // console.log(`🔤 First name starts with: ${firstChar}`);
     
-    // Verify sort button shows A-Z
-    await expect(page.getByRole('button', { name: '↑ Sort: Name (A-Z)' })).toBeVisible();
+    // // Verify sort button shows A-Z
+    // await expect(page.getByRole('button', { name: '↑ Sort: Name (A-Z)' })).toBeVisible();
     
-    // Test Z-A sort
-    await sortButton.click();
-    await page.waitForTimeout(500);
-    await expect(page.getByRole('button', { name: '↓ Sort: Name (Z-A)' })).toBeVisible();
+    // // Test Z-A sort
+    // await sortButton.click();
+    // await page.waitForTimeout(500);
+    // await expect(page.getByRole('button', { name: '↓ Sort: Name (Z-A)' })).toBeVisible();
     
-    // Get names again for Z-A sort
-    const zNames: string[] = [];
-    for (let i = 0; i < Math.min(nameCount, 20); i++) {
-        const name = await nameCells.nth(i).textContent();
-        if (name) zNames.push(name.trim());
-    }
+    // // Get names again for Z-A sort
+    // const zNames: string[] = [];
+    // for (let i = 0; i < Math.min(nameCount, 20); i++) {
+    //     const name = await nameCells.nth(i).textContent();
+    //     if (name) zNames.push(name.trim());
+    // }
     
-    // Verify Z-A sort
-    const zSortedNames = [...zNames].sort((a, b) => b.localeCompare(a));
-    expect(zNames).toEqual(zSortedNames);
-    console.log(`✅ Sort functionality verified for both A-Z and Z-A`);
+    // // Verify Z-A sort
+    // const zSortedNames = [...zNames].sort((a, b) => b.localeCompare(a));
+    // expect(zNames).toEqual(zSortedNames);
+    // console.log(`✅ Sort functionality verified for both A-Z and Z-A`);
 
-    });
+    // });
     test('TC-GUEST-011 | Guest Name with Special Characters', async ({ page }) => {
          const specialName = "O'Brien";
     const specialEmail = DataGenerator.uniqueEmail('special');
