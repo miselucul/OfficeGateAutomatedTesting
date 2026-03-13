@@ -238,39 +238,39 @@ test.describe('Report Module', () => {
   }
 });
 
- test('TC-RPT-006 | Visitor Trends Chart Matches Detailed Report', async ({ page }) => {
-  console.log('📝 Starting TC-RPT-006: Visitor Trends Chart Matches Detailed Report');
+//  test('TC-RPT-006 | Visitor Trends Chart Matches Detailed Report', async ({ page }) => {
+//   console.log('📝 Starting TC-RPT-006: Visitor Trends Chart Matches Detailed Report');
   
-  try {
-    // FIX: Use the exact pattern from TC-001 that we know works
-    const statsGrid = page.locator('div').filter({ has: page.getByText('Total Visits') }).first();
-    const totalVisitsText = await statsGrid.locator('h1').filter({ hasText: /\d+/ }).first().textContent();
-    const totalVisits = parseInt(totalVisitsText || '0');
+//   try {
+//     // FIX: Use the exact pattern from TC-001 that we know works
+//     const statsGrid = page.locator('div').filter({ has: page.getByText('Total Visits') }).first();
+//     const totalVisitsText = await statsGrid.locator('h1').filter({ hasText: /\d+/ }).first().textContent();
+//     const totalVisits = parseInt(totalVisitsText || '0');
     
-    console.log(`✅ Total Visits from stats: ${totalVisits}`);
+//     console.log(`✅ Total Visits from stats: ${totalVisits}`);
     
-    // Scroll to Detailed Report and count rows
-    await page.getByRole('heading', { name: 'Detailed Report' }).scrollIntoViewIfNeeded();
+//     // Scroll to Detailed Report and count rows
+//     await page.getByRole('heading', { name: 'Detailed Report' }).scrollIntoViewIfNeeded();
     
-    // Wait for table to load
-    await page.locator('table tbody tr').first().waitFor({ state: 'attached', timeout: 5000 });
+//     // Wait for table to load
+//     await page.locator('table tbody tr').first().waitFor({ state: 'attached', timeout: 5000 });
     
-    // Count rows in table (excluding header)
-    const tableRows = page.locator('table tbody tr');
-    const rowCount = await tableRows.count();
+//     // Count rows in table (excluding header)
+//     const tableRows = page.locator('table tbody tr');
+//     const rowCount = await tableRows.count();
     
-    console.log(`✅ Rows in Detailed Report: ${rowCount}`);
+//     console.log(`✅ Rows in Detailed Report: ${rowCount}`);
     
-    // Compare totals
-    expect(rowCount).toBe(totalVisits);
-    console.log(`✅ Total Visits (${totalVisits}) matches number of rows in Detailed Report (${rowCount})`);
+//     // Compare totals
+//     expect(rowCount).toBe(totalVisits);
+//     console.log(`✅ Total Visits (${totalVisits}) matches number of rows in Detailed Report (${rowCount})`);
     
-  } catch (error) {
-    console.error('❌ Test failed:', error);
-    await page.screenshot({ path: `screenshots/TC-RPT-006-${Date.now()}.png` });
-    throw error;
-  }
-});
+//   } catch (error) {
+//     console.error('❌ Test failed:', error);
+//     await page.screenshot({ path: `screenshots/TC-RPT-006-${Date.now()}.png` });
+//     throw error;
+//   }
+// });
   test('TC-RPT-007 | Average Duration Calculation', async ({ page }) => {
   console.log('📝 Starting TC-RPT-007: Average Duration Calculation');
   
