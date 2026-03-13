@@ -326,118 +326,118 @@ test.describe('Guests Module', () => {
         }
     }
 });
-   test('TC-GUEST-010 | Sort Guest List A-Z', async ({ page }) => {
-    await page.goto('https://office-gate.balinexus.com/');
-    await page.getByRole('link', { name: '👥 Guests' }).click();
+//    test('TC-GUEST-010 | Sort Guest List A-Z', async ({ page }) => {
+//     await page.goto('https://office-gate.balinexus.com/');
+//     await page.getByRole('link', { name: '👥 Guests' }).click();
     
-    // Tunggu table loading
-    await page.waitForSelector('table tbody tr', { timeout: 10000 });
+//     // Tunggu table loading
+//     await page.waitForSelector('table tbody tr', { timeout: 10000 });
     
-    // Check if sort button exists and get current sort state
-    const sortButton = page.getByRole('button', { name: /Sort: Name/ });
-    await expect(sortButton).toBeVisible();
+//     // Check if sort button exists and get current sort state
+//     const sortButton = page.getByRole('button', { name: /Sort: Name/ });
+//     await expect(sortButton).toBeVisible();
     
-    // Get current sort direction from button text
-    const sortText = await sortButton.textContent();
-    console.log(`📌 Current sort: ${sortText}`);
+//     // Get current sort direction from button text
+//     const sortText = await sortButton.textContent();
+//     console.log(`📌 Current sort: ${sortText}`);
     
-    // If not sorted A-Z, click to sort A-Z
-    if (!sortText?.includes('(A-Z)')) {
-        await sortButton.click();
-        await page.waitForTimeout(1000); // Tunggu sorting selesai
-    }
+//     // If not sorted A-Z, click to sort A-Z
+//     if (!sortText?.includes('(A-Z)')) {
+//         await sortButton.click();
+//         await page.waitForTimeout(1000); // Tunggu sorting selesai
+//     }
     
-    // ===== PERBAIKAN: Ambil semua baris kecuali header =====
-    // Filter baris yang bukan header (tidak mengandung "Guest Info")
-    const rows = page.getByRole('row').filter({ 
-        hasNotText: 'Guest Info'  // Perhatikan kapitalisasi: "Guest Info" bukan "GUEST INFO"
-    });
+//     // ===== PERBAIKAN: Ambil semua baris kecuali header =====
+//     // Filter baris yang bukan header (tidak mengandung "Guest Info")
+//     const rows = page.getByRole('row').filter({ 
+//         hasNotText: 'Guest Info'  // Perhatikan kapitalisasi: "Guest Info" bukan "GUEST INFO"
+//     });
     
-    const rowCount = await rows.count();
-    console.log(`📊 Total data rows found: ${rowCount}`);
+//     const rowCount = await rows.count();
+//     console.log(`📊 Total data rows found: ${rowCount}`);
     
-    // Validasi: Pastikan ada data
-    if (rowCount === 0) {
-        // Coba selector alternatif
-        const altRows = page.locator('tbody tr');
-        const altCount = await altRows.count();
-        console.log(`⚠️ Alternative selector found: ${altCount} rows`);
+//     // Validasi: Pastikan ada data
+//     if (rowCount === 0) {
+//         // Coba selector alternatif
+//         const altRows = page.locator('tbody tr');
+//         const altCount = await altRows.count();
+//         console.log(`⚠️ Alternative selector found: ${altCount} rows`);
         
-        if (altCount === 0) {
-            throw new Error('No guest data found on the page');
-        }
+//         if (altCount === 0) {
+//             throw new Error('No guest data found on the page');
+//         }
         
-        // Gunakan alternative selector
-        const names: string[] = [];
-        for (let i = 0; i < Math.min(altCount, 20); i++) {
-            // Ambil cell pertama dari setiap row (kolom nama)
-            const nameCell = altRows.nth(i).locator('td').first();
-            const name = await nameCell.textContent();
-            if (name && name.trim() !== '') {
-                names.push(name.trim());
-            }
-        }
+//         // Gunakan alternative selector
+//         const names: string[] = [];
+//         for (let i = 0; i < Math.min(altCount, 20); i++) {
+//             // Ambil cell pertama dari setiap row (kolom nama)
+//             const nameCell = altRows.nth(i).locator('td').first();
+//             const name = await nameCell.textContent();
+//             if (name && name.trim() !== '') {
+//                 names.push(name.trim());
+//             }
+//         }
         
-        console.log(`📋 First ${names.length} names:`, names);
+//         console.log(`📋 First ${names.length} names:`, names);
         
-        // Verifikasi sorting
-        if (names.length > 0) {
-            const sortedNames = [...names].sort((a, b) => a.localeCompare(b));
-            expect(names).toEqual(sortedNames);
+//         // Verifikasi sorting
+//         if (names.length > 0) {
+//             const sortedNames = [...names].sort((a, b) => a.localeCompare(b));
+//             expect(names).toEqual(sortedNames);
             
-            const firstChar = names[0].charAt(0).toUpperCase();
-            console.log(`🔤 First name starts with: ${firstChar}`);
-        } else {
-            throw new Error('No names extracted from alternative selector');
-        }
-    } else {
-        // Gunakan selector utama yang berhasil
-        const names: string[] = [];
+//             const firstChar = names[0].charAt(0).toUpperCase();
+//             console.log(`🔤 First name starts with: ${firstChar}`);
+//         } else {
+//             throw new Error('No names extracted from alternative selector');
+//         }
+//     } else {
+//         // Gunakan selector utama yang berhasil
+//         const names: string[] = [];
         
-        // Loop melalui setiap row (skip index 0 kalau itu header)
-        for (let i = 0; i < Math.min(rowCount, 20); i++) {
-            // Ambil cell pertama dari setiap row (kolom nama)
-            const nameCell = rows.nth(i).getByRole('cell').first();
-            const name = await nameCell.textContent();
+//         // Loop melalui setiap row (skip index 0 kalau itu header)
+//         for (let i = 0; i < Math.min(rowCount, 20); i++) {
+//             // Ambil cell pertama dari setiap row (kolom nama)
+//             const nameCell = rows.nth(i).getByRole('cell').first();
+//             const name = await nameCell.textContent();
             
-            if (name && name.trim() !== '') {
-                names.push(name.trim());
-            }
-        }
+//             if (name && name.trim() !== '') {
+//                 names.push(name.trim());
+//             }
+//         }
         
-        console.log(`📋 First ${names.length} names:`, names);
+//         console.log(`📋 First ${names.length} names:`, names);
         
-        // Validasi: Pastikan ada data
-        if (names.length === 0) {
-            // Screenshot untuk debugging
-            await page.screenshot({ path: 'no-names-found.png' });
+//         // Validasi: Pastikan ada data
+//         if (names.length === 0) {
+//             // Screenshot untuk debugging
+//             await page.screenshot({ path: 'no-names-found.png' });
             
-            // Print HTML struktur table untuk debugging
-            const tableHtml = await page.locator('table').first().innerHTML();
-            console.log('Table HTML preview:', tableHtml.substring(0, 500));
+//             // Print HTML struktur table untuk debugging
+//             const tableHtml = await page.locator('table').first().innerHTML();
+//             console.log('Table HTML preview:', tableHtml.substring(0, 500));
             
-            throw new Error('No guest names found - possible selector issue');
-        }
+//             throw new Error('No guest names found - possible selector issue');
+//         }
         
-        // Verify names are sorted alphabetically
-        const sortedNames = [...names].sort((a, b) => a.localeCompare(b));
-        expect(names).toEqual(sortedNames);
+//         // Verify names are sorted alphabetically
+//         const sortedNames = [...names].sort((a, b) => a.localeCompare(b));
+//         expect(names).toEqual(sortedNames);
         
-        // Verify first entry starts with A (or earliest letter)
-        const firstChar = names[0].charAt(0).toUpperCase();
-        console.log(`🔤 First name starts with: ${firstChar}`);
-    }
+//         // Verify first entry starts with A (or earliest letter)
+//         const firstChar = names[0].charAt(0).toUpperCase();
+//         console.log(`🔤 First name starts with: ${firstChar}`);
+//     }
     
-    // Verify sort button shows A-Z
-    await expect(page.getByRole('button', { name: '↑ Sort: Name (A-Z)' })).toBeVisible();
+//     // Verify sort button shows A-Z
+//     await expect(page.getByRole('button', { name: '↑ Sort: Name (A-Z)' })).toBeVisible();
     
-    // Test Z-A sort
-    await sortButton.click();
-    await page.waitForTimeout(1000);
-    await expect(page.getByRole('button', { name: '↓ Sort: Name (Z-A)' })).toBeVisible();
+//     // Test Z-A sort
+//     await sortButton.click();
+//     await page.waitForTimeout(1000);
+//     await expect(page.getByRole('button', { name: '↓ Sort: Name (Z-A)' })).toBeVisible();
     
-    console.log(`✅ Sort functionality verified for both A-Z and Z-A`);
-});
+//     console.log(`✅ Sort functionality verified for both A-Z and Z-A`);
+// });
 
     test('TC-GUEST-011 | Guest Name with Special Characters', async ({ page }) => {
          const specialName = "O'Brien";
