@@ -10,3 +10,4 @@ dist/
 login-state.json
 auth.json
 *.log
+login-state.json

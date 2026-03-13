@@ -139,24 +139,37 @@ test.describe('Guests Module', () => {
     expect(isNameFieldInvalid).toBeTruthy();
     });
 
-    test('TC-GUEST-004 | Add Guest With Invalid Email Format', async ({ page }) => {
-        await page.goto('https://office-gate.balinexus.com/');
-        // Navigate to Guests module
-        await page.getByRole('link', { name: '👥 Guests' }).click();
-          await page.getByRole('button', { name: '+ Add New Guest' }).click();
-        await page.getByRole('textbox', { name: 'Guest Name*' }).fill(guestData.name);
-        await page.getByRole('textbox', { name: 'Email*' }).fill('notanemail');
-        await page.getByRole('textbox', { name: 'Phone Number*' }).fill(guestData.phone);
+   test('TC-GUEST-004 | Add Guest With Invalid Email Format', async ({ page }) => {
+    await page.goto('https://office-gate.balinexus.com/');
+    // Navigate to Guests module
+    await page.getByRole('link', { name: '👥 Guests' }).click();
+    await page.getByRole('button', { name: '+ Add New Guest' }).click();
+    
+    await page.getByRole('textbox', { name: 'Guest Name*' }).fill(guestData.name);
+    await page.getByRole('textbox', { name: 'Email*' }).fill('notanemail');
+    await page.getByRole('textbox', { name: 'Phone Number*' }).fill(guestData.phone);
 
-        await page.getByRole('button', { name: 'Add Guest' }).click();
-        //VALIDASI APAKAH KITA MASIH DI HALAMAN YG SAMA
-        await expect(page.getByRole('textbox', { name: 'Guest Name*' })).toBeVisible();
-        const isNameFieldInvalid = await page.getByRole('textbox', { name: 'Guest Name*' }).evaluate((el: HTMLInputElement) => {
+    await page.getByRole('button', { name: 'Add Guest' }).click();
+    
+    // FIX: Verify we're still on the form page
+    await expect(page.getByRole('textbox', { name: 'Guest Name*' })).toBeVisible();
+    
+    // FIX: Check Email field validity instead of Name field
+    const isEmailFieldInvalid = await page.getByRole('textbox', { name: 'Email*' }).evaluate((el: HTMLInputElement) => {
         return !el.validity.valid; // true jika field tidak valid 
     });
-    expect(isNameFieldInvalid).toBeTruthy();
-
-    });
+    expect(isEmailFieldInvalid).toBeTruthy();
+    
+    // Optional: Also check if there's a validation error message
+    const emailError = page.locator('text=invalid email').or(
+        page.locator('text=valid email')
+    ).first();
+    
+    if (await emailError.isVisible().catch(() => false)) {
+        const errorText = await emailError.textContent();
+        console.log(`📧 Email validation error: "${errorText}"`);
+    }
+});
 
     test('TC-GUEST-005 | Duplicate Guest Name Prevention', async ({ page }) => {
         //GUEST 1
