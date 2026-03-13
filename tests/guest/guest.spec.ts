@@ -290,13 +290,7 @@ test.describe('Guests Module', () => {
         }
     });
 
-    // =========================================================
-    // FIX TC-GUEST-010: Di-uncomment dengan perbaikan:
-    // 1. Gunakan locator 'tbody tr' yang lebih reliable
-    // 2. Guard: skip charAt jika names[] kosong (hindari crash)
-    // 3. Tambah waitForTimeout setelah klik sort agar data settle
-    // =========================================================
-
+    
     test('TC-GUEST-011 | Guest Name with Special Characters', async ({ page }) => {
         const specialName = "O'Brien";
         const specialEmail = DataGenerator.uniqueEmail('special');
